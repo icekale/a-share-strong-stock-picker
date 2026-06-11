@@ -1,0 +1,4 @@
+interface:
+  display_name: "A股强势选股"
+  short_description: "用 MCP 和 TickFlow 扫描 A 股强势候选"
+  default_prompt: "扫描 A 股强势候选股，按涨停、趋势、均线、新高和量价信号排序。"
