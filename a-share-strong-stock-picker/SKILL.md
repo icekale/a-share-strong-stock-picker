@@ -1,6 +1,6 @@
 ---
 name: a-share-strong-stock-picker
-description: Use when Codex needs to screen A-share strong stocks, scan the whole A-share market, analyze stocks that had limit-up moves in the last 20 trading sessions, rank candidates by trend/K-line/volume strength, or explain candidate/hold/reduce/avoid/watch-low-absorb signals using the local a-share-finance MCP server with optional TickFlow realtime data.
+description: Use when Codex needs to screen A-share strong stocks, scan the whole A-share market, analyze stocks that had limit-up moves in the last 20 trading sessions, rank candidates by trend/K-line/volume/sector strength, or explain candidate/hold/reduce/avoid/watch-low-absorb signals using the local a-share-finance MCP server with optional TickFlow realtime data.
 ---
 
 # A-share Strong Stock Picker
@@ -27,8 +27,8 @@ For a full A-share scan:
 
 1. Call `strong_stock_scan(provider="auto", universe_id="CN_Equity_A", max_symbols=0, result_limit=<user_limit>, include_intraday=<true when the user asks for盤中/早盘 rules>)`.
 2. Expect the MCP to build a recent limit-up candidate pool first, then verify those candidates. Do not request raw full-market K-lines unless the user explicitly asks.
-3. Sort and present by `status`, then `score`, then key positive signals.
-4. Always include `risk_flags` for each name. Do not hide reduce/avoid signals behind a high score.
+3. Sort and present by Chinese `status_zh`, then sector-adjusted `score`, then key positive signals.
+4. Always include `risk_flags` for each name. Do not hide reduce/avoid signals behind a high score or a strong sector.
 
 For a quick test or quota-conscious scan, use `max_symbols=300` before running the full universe.
 
@@ -40,6 +40,7 @@ The scanner encodes these rules:
 
 - First gate: only consider stocks with a limit-up move in the last 20 trading sessions.
 - Trend first: prefer price above MA5, MA5 not turning down, and close above MA10/MA20.
+- Sector strength is a score/rating modifier, not a hard gate. Strong sectors improve ranking; weak sectors can still contain strong individual stocks.
 - Strong K-line structure: red bodies should be larger than green bodies, with stronger volume on up days.
 - Highest-quality signal: fresh or near 200-session high while still above short moving averages.
 - Continue holding strength when volume confirms price progress.
@@ -49,12 +50,23 @@ The scanner encodes these rules:
 - Exit discipline: do not sell only because the candle is green; reduce into red strength or failed breakout signals.
 - No-trade discipline: if trend is unclear, say "空仓/观望" instead of forcing a pick.
 
+## Sector Rating
+
+When `strong_stock_scan` returns sector fields, use them in the table and explanation:
+
+- `sector_status_zh`: one of `强势主线`, `局部强势`, `弱板块强个股`, `板块退潮`, `未知板块`.
+- `sector_score`: sector breadth score derived from recent limit-up candidate count, repeat limit-up hits, strong candidates, leader/new-high names, and reduce/avoid pressure.
+- `sector_reasons`: compact reasons such as recent limit-up breadth, repeated hits, strong-candidate count, or ebbing risk.
+- `base_score`: individual-stock score before sector bonus. Use it when explaining whether a high score came from the stock itself or the sector tailwind.
+
+Never upgrade a `减仓` or `空仓/回避` name just because its sector is strong. Trend and risk flags stay first.
+
 ## Output Format
 
 Keep the answer compact and operational:
 
 - Data source and limitations: TickFlow realtime, TickFlow daily only, or AKShare fallback.
-- Top candidates table: symbol, Chinese status from `status_zh`, score, key positives, key risks. Do not show raw English `status` unless the user asks for API fields.
+- Top candidates table: symbol, Chinese status from `status_zh`, score, sector status from `sector_status_zh`, key positives, key risks. Do not show raw English `status` unless the user asks for API fields.
 - Action interpretation:
   - `候选`: strong candidate, but entry still waits for non-chasing setup.
   - `持有/观察`: trend intact, keep observing/holding.
