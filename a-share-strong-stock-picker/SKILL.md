@@ -54,13 +54,13 @@ The scanner encodes these rules:
 Keep the answer compact and operational:
 
 - Data source and limitations: TickFlow realtime, TickFlow daily only, or AKShare fallback.
-- Top candidates table: symbol, status, score, key positives, key risks.
+- Top candidates table: symbol, Chinese status from `status_zh`, score, key positives, key risks. Do not show raw English `status` unless the user asks for API fields.
 - Action interpretation:
-  - `candidate`: strong candidate, but entry still waits for non-chasing setup.
-  - `hold`: trend intact, keep observing/holding.
-  - `reduce`: lock profit or reduce exposure.
-  - `watch_low_absorb`: possible low-absorb watch after sharp drop and recovery.
-  - `avoid`: empty-position/avoid.
+  - `候选`: strong candidate, but entry still waits for non-chasing setup.
+  - `持有/观察`: trend intact, keep observing/holding.
+  - `减仓`: lock profit or reduce exposure.
+  - `低吸观察`: possible low-absorb watch after sharp drop and recovery.
+  - `空仓/回避`: empty-position/avoid.
 - Final note: "趋势优先，信号不清就空仓。"
 
 Never present the result as guaranteed profit, a direct order, or a substitute for position sizing and risk control.
